@@ -14,7 +14,7 @@ mapfile -t libs < files.txt
 # select 1 of those fastq's using the lsf job index
 f=${libs[$(($LSB_JOBINDEX - 1))]}
 
-cutadapt -a AGATCGG -g TCTTCCGATCT --discard-untrimmed -m 28 --nextseq-trim=20 -f fastq -o ./filtering2/${f}.t.fq ./fastq2/${f}.R2.fq
-fastq_quality_filter -q 10 -p 95 -i ./filtering2/${f}.t.fq -o ./filtering2/${f}.t.f.fq
-seqtk seq -a ./filtering2/${f}.t.f.fq | perl collapseFA.pl > ./filtering2/${f}.c.fa # fastq to fasta and collapsing based on 5'end random 10-mers
-seqtk trimfq ./filtering2/${f}.c.fa -b 10 | seqtk seq -L 18 > ./fastq2/${f}.fa # removing barcodes, length filtering and writing fasta that will be used for reps mapping
+cutadapt -a AGATCGG -g TCTTCCGATCT --discard-untrimmed -m 28 --nextseq-trim=20 -f fastq -o ./filtering/${f}.t.fq ./fastq/${f}.R2.fq
+fastq_quality_filter -q 10 -p 95 -i ./filtering/${f}.t.fq -o ./filtering/${f}.t.f.fq
+seqtk seq -a ./filtering/${f}.t.f.fq | perl collapseFA.pl > ./filtering/${f}.c.fa # fastq to fasta and collapsing based on 5'end random 10-mers
+seqtk trimfq ./filtering/${f}.c.fa -b 10 | seqtk seq -L 18 > ./fastq/${f}.fa # removing barcodes, length filtering and writing fasta that will be used for reps mapping
