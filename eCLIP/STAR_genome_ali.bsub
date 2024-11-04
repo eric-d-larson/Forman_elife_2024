@@ -1,0 +1,46 @@
+#! /usr/bin/env bash
+#BSUB -n 20 # run 20 core
+#BSUB -J star_genome_map_less_mm3[1-8]  # run on 4 samples, submitted 2 at a time
+#BSUB -R "select[mem>60] rusage[mem=60]" # use 30Gb of memory, require a node with >60Gb
+#BSUB -o logs/star_genome_map_less_mm3_%J.log # write logs with jobnumber appended
+#BSUB -e logs/star_genome_map_less_mm3_%J.out # write err logs with jobnumber appended
+#BSUB -q rna
+
+conda init bash
+source ~/.bashrc
+conda activate CLIP
+
+mapfile -t libs < files.txt
+
+# select 1 of those fastq's using the lsf job index
+lib=${libs[$(($LSB_JOBINDEX - 1))]}
+
+module load STAR/2.7.9a
+
+STAR --runMode alignReads \
+  --runThreadN 20 \
+  --genomeDir ../genome_files/mouse_M26/star_index \
+  --genomeLoad NoSharedMemory \
+  --readFilesIn \
+  ./fastq/${lib}.rmreps.fa \
+  --outSAMunmapped Within \
+  --outFilterMultimapNmax 1 \
+  --outFilterMultimapScoreRange 1 \
+  --outFileNamePrefix ./ali/${lib}.aligned_ \
+  --outSAMattributes All \
+  --outSAMtype BAM Unsorted \
+  --outFilterType BySJout \
+  --outFilterMismatchNoverReadLmax 0.04 \
+  --outSAMattrRGline ID:foo \
+  --alignEndsType EndToEnd \
+  --outStd Log \
+  --outBAMcompression 10 \
+  --outSAMmode Full
+  
+mv ./ali/${lib}.aligned_Aligned.out.bam ./ali/${lib}.aligned.bam
+
+module load samtools/1.12
+
+samtools view -F 4 -b -o ./ali/${lib}.aligned.mapped.bam ./ali/${lib}.aligned.bam
+samtools sort -o ./ali/${lib}.aligned.mapped.sorted.bam ./ali/${lib}.aligned.mapped.bam
+samtools index ./ali/${lib}.aligned.mapped.sorted.bam

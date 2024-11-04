@@ -1,0 +1,16 @@
+#! /usr/bin/env bash
+#BSUB -n 10 # run 10 core
+#BSUB -J parseBG_minus  # run on 148 samples, submitted 15 at a time
+#BSUB -R "select[mem>30] rusage[mem=30]" # use 30Gb of memory, require a node with >30Gb
+#BSUB -o logs/parseBG_minus_%J.log # write logs with jobnumber appended
+#BSUB -e logs/parseBG_minus_%J.out # write err logs with jobnumber appended
+#BSUB -q rna
+
+conda init bash
+source ~/.bashrc
+conda activate omniCLIP
+
+
+cd /beevol/home/sajekmar/CLIP/omniCLIP # omniCLIP works only from its parent dir
+
+omniCLIP parsingBG --db-file /beevol/home/sajekmar/CLIP/Srsf3_mouse/gencode_m26.db --genome-dir /beevol/home/sajekmar/CLIP/genome_files/mouse_M26/chromosomes --bg-files /beevol/home/sajekmar/CLIP/Srsf3_mouse/ali/smi_minus_rep1.aligned.mapped.sorted.bam --out-file /beevol/home/sajekmar/CLIP/Srsf3_mouse/omniCLIP_minus_smi_only/bg.dat

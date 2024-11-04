@@ -1,0 +1,16 @@
+#! /usr/bin/env bash
+#BSUB -n 30 # run 10 core
+#BSUB -J runOC_minus_smi  # run on 148 samples, submitted 15 at a time
+#BSUB -R "select[mem>30] rusage[mem=30]" # use 30Gb of memory, require a node with >30Gb
+#BSUB -o logs/run_OC_minus_smi_%J.log # write logs with jobnumber appended
+#BSUB -e logs/run_OC_minus_smi_%J.out # write err logs with jobnumber appended
+#BSUB -q rna
+
+conda init bash
+source ~/.bashrc
+conda activate omniCLIP
+
+
+cd /beevol/home/sajekmar/CLIP/omniCLIP # omniCLIP works only from its parent dir
+
+omniCLIP run_omniCLIP --db-file ../Srsf3_mouse/gencode_m26.db --bg-dat ../Srsf3_mouse/omniCLIP_minus_smi_only/bg.dat --clip-dat ../Srsf3_mouse/omniCLIP_minus_smi_only/clip.dat --out-dir ../Srsf3_mouse/omniCLIP_minus_smi_only/ --seed 109 --nb-cores 30 --fg_pen 5

@@ -1,0 +1,40 @@
+#! /usr/bin/env bash
+#BSUB -n 20 # run 20 core
+#BSUB -J star_rep_rm[1-8]  # run on 4 samples, submitted 2 at a time
+#BSUB -R "select[mem>60] rusage[mem=60]" # use 60Gb of memory, require a node with >60Gb
+#BSUB -o logs/star_rep_rm_%J.log # write logs with jobnumber appended
+#BSUB -e logs/star_rep_rm_%J.out # write err logs with jobnumber appended
+#BSUB -q rna
+
+source ~/.bashrc
+conda activate CLIP
+
+mapfile -t libs < files.txt
+
+# select 1 of those fastq's using the lsf job index
+lib=${libs[$(($LSB_JOBINDEX - 1))]}
+
+module load STAR/2.7.9a
+
+STAR \
+  --runMode alignReads \
+  --runThreadN 20 \
+  --genomeDir ./rep_seqs/rep_seq_idx \
+  --genomeLoad NoSharedMemory \
+  --alignEndsType EndToEnd \
+  --outSAMunmapped Within \
+  --outFilterMultimapNmax 30 \
+  --outFilterMultimapScoreRange 1 \
+  --outFileNamePrefix ./ali/${lib}.rmreps \
+  --outSAMtype BAM Unsorted \
+  --outFilterType BySJout \
+  --outBAMcompression 10 \
+  --outReadsUnmapped Fastx \
+  --outFilterScoreMin 10 \
+  --outSAMattrRGline ID:foo \
+  --outSAMattributes All \
+  --outSAMmode Full \
+  --readFilesIn ./fastq/${lib}.fa 
+
+mv ./ali/${lib}.rmrepsAligned.out.bam ./ali/${lib}.reps.bam 
+mv ./ali/${lib}.rmrepsUnmapped.out.mate1 ./fastq/${lib}.rmreps.fa
