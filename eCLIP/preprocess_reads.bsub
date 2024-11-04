@@ -1,0 +1,20 @@
+#! /usr/bin/env bash
+#BSUB -n 20 # run 20 core
+#BSUB -J prepare_fa[1-8]  
+#BSUB -R "select[mem>30] rusage[mem=30]" # use 30Gb of memory, require a node with >60Gb
+#BSUB -o ./logs/prepare_fa_%J.log # write logs with jobnumber appended
+#BSUB -e ./logs/prepare_fa_%J.out # write err logs with jobnumber appended
+#BSUB -q rna
+
+source ~/.bashrc
+conda activate CLIP
+
+mapfile -t libs < files.txt
+
+# select 1 of those fastq's using the lsf job index
+f=${libs[$(($LSB_JOBINDEX - 1))]}
+
+cutadapt -a AGATCGG -g TCTTCCGATCT --discard-untrimmed -m 28 --nextseq-trim=20 -f fastq -o ./filtering2/${f}.t.fq ./fastq2/${f}.R2.fq
+fastq_quality_filter -q 10 -p 95 -i ./filtering2/${f}.t.fq -o ./filtering2/${f}.t.f.fq
+seqtk seq -a ./filtering2/${f}.t.f.fq | perl collapseFA.pl > ./filtering2/${f}.c.fa # fastq to fasta and collapsing based on 5'end random 10-mers
+seqtk trimfq ./filtering2/${f}.c.fa -b 10 | seqtk seq -L 18 > ./fastq2/${f}.fa # removing barcodes, length filtering and writing fasta that will be used for reps mapping
