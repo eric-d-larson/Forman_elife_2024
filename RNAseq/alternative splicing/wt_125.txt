@@ -1,0 +1,1 @@
+results/star_pass2/22_S41/22_S41.sort.bam,results/star_pass2/24_S43/24_S43.sort.bam
